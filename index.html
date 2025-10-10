@@ -5,33 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>神秘寻宝冒险</title>
     <style>
+        /* 基础样式 */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f0e6d2;
             color: #333;
             line-height: 1.6;
             margin: 0;
-            padding: 20px;
-            background-image: url('https://images.unsplash.com/photo-1569336415962-a57141f2eefd?ixlib=rb-4.0.3');
-            background-size: cover;
+            padding: 0;
             background-attachment: fixed;
+            overflow-x: hidden;
         }
-        
+
+        /* 全景页核心样式 */
+        .panorama-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('https://images.unsplash.com/photo-1518655048521-f130df041f66?ixlib=rb-4.0.3');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease;
+            z-index: 100;
+        }
+
+        .panorama-title {
+            color: #fff;
+            font-size: 3rem;
+            text-shadow: 0 0 15px rgba(0,0,0,0.8);
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .location-markers {
+            display: flex;
+            gap: 80px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+
+        .location-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .location-marker:hover {
+            transform: scale(1.1);
+        }
+
+        .marker-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+        }
+
+        .marker-icon i {
+            font-size: 2.5rem;
+            color: #8b4513;
+        }
+
+        .marker-name {
+            color: #fff;
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            background-color: rgba(0,0,0,0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        /* 游戏容器样式 */
         .game-container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background-color: rgba(255, 255, 255, 0.9);
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            min-height: 100vh;
+            display: none; /* 初始隐藏，从全景页进入后显示 */
+            padding-top: 70px; /* 给顶部返回按钮留空间 */
         }
-        
+
         h1 {
             text-align: center;
             color: #8b4513;
             margin-bottom: 30px;
         }
-        
+
         .game-status {
             min-height: 100px;
             margin: 20px 0;
@@ -39,8 +117,12 @@
             border-radius: 5px;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
         }
-        
+
         .adventure-log {
             margin-top: 20px;
             padding: 15px;
@@ -49,7 +131,7 @@
             max-height: 300px;
             overflow-y: auto;
         }
-        
+
         .log-entry {
             margin: 10px 0;
             padding: 10px;
@@ -57,17 +139,18 @@
             background-color: rgba(255,255,255,0.7);
             animation: fadeIn 0.5s ease-in;
         }
-        
-        .location {
-            font-weight: bold;
-            color: #8b4513;
+
+        .log-entry.failure {
+            border-left-color: #dc3545;
+            color: #dc3545;
+            font-weight: 500;
         }
-        
+
         .controls {
             text-align: center;
-            margin-top: 30px;
+            margin: 30px 0;
         }
-        
+
         button {
             background-color: #8b4513;
             color: white;
@@ -77,21 +160,41 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin: 0 10px;
         }
-        
+
         button:hover {
             background-color: #6d3510;
         }
-        
+
+        button:disabled {
+            background-color: #a67c52;
+            cursor: not-allowed;
+        }
+
+        /* 返回全景页按钮特殊样式 */
+        .back-to-panorama {
+            background-color: #2c3e50;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+
+        .back-to-panorama:hover {
+            background-color: #1a252f;
+        }
+
+        /* 游戏动画区域 */
         .game-animation {
-            height: 300px;
+            height: 400px;
             margin: 20px 0;
             border-radius: 5px;
             overflow: hidden;
             position: relative;
             background-color: #e8e0d0;
         }
-        
+
         .scene {
             position: absolute;
             top: 0;
@@ -103,41 +206,155 @@
             opacity: 0;
             transition: opacity 1s ease-in-out;
         }
-        
+
         .scene.active {
             opacity: 1;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
+
         .character {
             position: absolute;
-            width: 60px;
-            height: 80px;
+            width: 80px;
+            height: 100px;
             bottom: 20px;
             left: 50px;
             background-image: url('https://cdn-icons-png.flaticon.com/512/2875/2875124.png');
             background-size: contain;
             background-repeat: no-repeat;
-            transition: left 2s linear;
+            transition: left 2s linear, transform 0.3s ease;
+            z-index: 5;
         }
-        
-        .success {
-            color: #28a745;
-            font-weight: bold;
+
+        .character.facing-right {
+            transform: scaleX(1);
         }
-        
-        .failure {
-            color: #dc3545;
-            font-weight: bold;
+
+        .character.facing-left {
+            transform: scaleX(-1);
+        }
+
+        /* 音频控制按钮 */
+        .audio-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.7);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 10;
+            transition: background-color 0.3s;
+        }
+
+        .audio-control:hover {
+            background-color: rgba(0,0,0,0.9);
+        }
+
+        .audio-control i {
+            font-size: 1.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .panorama-title {
+                font-size: 2rem;
+            }
+
+            .location-markers {
+                gap: 40px;
+            }
+
+            .marker-icon {
+                width: 60px;
+                height: 60px;
+            }
+
+            .marker-icon i {
+                font-size: 1.8rem;
+            }
+
+            .game-animation {
+                height: 300px;
+            }
+
+            .character {
+                width: 60px;
+                height: 80px;
+            }
+
+            .game-container {
+                padding: 20px;
+                padding-top: 60px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+                margin: 0 5px 10px;
+            }
         }
     </style>
+    <!-- 引入Font Awesome图标库（用于音频控制和地点标记） -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
 </head>
 <body>
-    <div class="game-container">
+    <!-- 1. 全景页 -->
+    <div class="panorama-page" id="panoramaPage">
+        <h1 class="panorama-title">神秘寻宝冒险 - 选择目的地</h1>
+        <div class="location-markers">
+            <div class="location-marker" data-scene="library">
+                <div class="marker-icon"><i class="fa fa-book"></i></div>
+                <div class="marker-name">古老图书馆</div>
+            </div>
+            <div class="location-marker" data-scene="forest">
+                <div class="marker-icon"><i class="fa fa-tree"></i></div>
+                <div class="marker-name">迷雾森林</div>
+            </div>
+            <div class="location-marker" data-scene="temple">
+                <div class="marker-icon"><i class="fa fa-university"></i></div>
+                <div class="marker-name">太阳神庙</div>
+            </div>
+            <div class="location-marker" data-scene="puzzle">
+                <div class="marker-icon"><i class="fa fa-puzzle-piece"></i></div>
+                <div class="marker-name">谜题密室</div>
+            </div>
+            <div class="location-marker" data-scene="river">
+                <div class="marker-icon"><i class="fa fa-tint"></i></div>
+                <div class="marker-name">地下暗河</div>
+            </div>
+            <div class="location-marker" data-scene="treasure">
+                <div class="marker-icon"><i class="fa fa-diamond"></i></div>
+                <div class="marker-name">宝藏密室</div>
+            </div>
+        </div>
+        <!-- 全景页音频控制 -->
+        <div class="audio-control" id="panoramaAudioControl">
+            <i class="fa fa-volume-up"></i>
+        </div>
+        <!-- 全景页背景音乐 -->
+        <audio id="panoramaAudio" loop>
+            <source src="https://samplelib.com/lib/preview/mp3/sample-15s.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+        </audio>
+    </div>
+
+    <!-- 2. 游戏主页面 -->
+    <div class="game-container" id="gameContainer">
+        <!-- 返回全景页按钮 -->
+        <button class="back-to-panorama" id="backToPanoramaBtn">
+            <i class="fa fa-map-marker"></i> 返回地图
+        </button>
+
         <h1>神秘寻宝冒险</h1>
         
         <div class="game-animation">
@@ -148,7 +365,7 @@
             <div id="river" class="scene" style="background-image: url('https://images.unsplash.com/photo-1577427508551-122a38a4b6f3?ixlib=rb-4.0.3')"></div>
             <div id="treasure" class="scene" style="background-image: url('https://img95.699pic.com/photo/60039/9772.jpg_wh860.jpg')"></div>
             
-            <div class="character" id="character"></div>
+            <div class="character facing-right" id="character"></div>
         </div>
         
         <div class="game-status" id="status">
@@ -161,11 +378,86 @@
         
         <div class="controls">
             <button id="startBtn">开始寻宝</button>
+            <button id="resetBtn">重置游戏</button>
         </div>
+
+        <!-- 游戏场景音频控制 -->
+        <div class="audio-control" id="gameAudioControl">
+            <i class="fa fa-volume-up"></i>
+        </div>
+        <!-- 各场景背景音乐 -->
+        <audio id="libraryAudio" loop>
+            <source src="https://samplelib.com/lib/preview/mp3/sample-6s.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+        </audio>
+        <audio id="forestAudio" loop>
+            <source src="https://samplelib.com/lib/preview/mp3/sample-9s.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+         </audio>
+        <audio id="templeAudio" loop>
+            <source src="https://samplelib.com/lib/preview/mp3/sample-12s.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+         </audio>
+        <audio id="puzzleAudio" loop>
+            <source src="https://samplelib.com/lib/preview/mp3/sample-18s.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+         </audio>
+        <audio id="riverAudio" loop>
+            <source src="https://samplelib.com/lib/preview/mp3/sample-21s.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+         </audio>
+        <audio id="treasureAudio" loop>
+            <source src="https://samplelib.com/lib/preview/mp3/sample-24s.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+         </audio>
     </div>
 
     <script>
-        // 扩展后的宝藏地图API
+        // -------------- 1. 游戏状态管理（含localStorage持久化）--------------
+        const GameState = {
+            // 初始状态定义
+            initialState: {
+                currentScene: 'library',    // 当前所在场景
+                adventureProgress: 0,       // 冒险进度（0-未开始，1-图书馆，2-森林，3-神庙，4-谜题，5-河流，6-宝藏，7-完成）
+                logEntries: [],             // 冒险日志
+                audioStates: {              // 各场景音频状态（true=播放，false=静音）
+                    panorama: true,
+                    library: true,
+                    forest: true,
+                    temple: true,
+                    puzzle: true,
+                    river: true,
+                    treasure: true
+                }
+            },
+
+            // 获取当前状态（优先从localStorage读取，无则用初始状态）
+            getCurrentState() {
+                const savedState = localStorage.getItem('treasureHuntState');
+                return savedState ? JSON.parse(savedState) : { ...this.initialState };
+            },
+
+            // 保存状态到localStorage
+            saveState(state) {
+                localStorage.setItem('treasureHuntState', JSON.stringify(state));
+            },
+
+            // 更新状态（局部更新）
+            updateState(updates) {
+                const currentState = this.getCurrentState();
+                const newState = { ...currentState, ...updates };
+                this.saveState(newState);
+                return newState;
+            },
+
+            // 重置状态
+            resetState() {
+                this.saveState(this.initialState);
+                return this.initialState;
+            }
+        };
+
+        // -------------- 2. 宝藏地图API（保留原逻辑）--------------
         class TreasureMap {
             static getInitialClue() {
                 return new Promise((resolve) => {
@@ -213,7 +505,6 @@
             static solvePuzzle() {
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
-                        // 模拟解谜过程，有一定概率失败
                         const random = Math.random();
                         if (random < 0.3) {
                             reject("谜题解答错误，机关锁住了！");
@@ -244,119 +535,336 @@
             }
         }
 
-        // DOM元素
-        const startBtn = document.getElementById('startBtn');
-        const statusEl = document.getElementById('status');
-        const logEl = document.getElementById('log');
-        const character = document.getElementById('character');
-        const scenes = document.querySelectorAll('.scene');
-        
-        // 辅助函数：显示日志
-        function addLog(entry, isSuccess = true) {
+        // -------------- 3. DOM元素与工具函数 --------------
+        // DOM元素引用
+        const dom = {
+            // 全景页元素
+            panoramaPage: document.getElementById('panoramaPage'),
+            panoramaAudio: document.getElementById('panoramaAudio'),
+            panoramaAudioControl: document.getElementById('panoramaAudioControl'),
+            locationMarkers: document.querySelectorAll('.location-marker'),
+            
+            // 游戏页元素
+            gameContainer: document.getElementById('gameContainer'),
+            backToPanoramaBtn: document.getElementById('backToPanoramaBtn'),
+            status: document.getElementById('status'),
+            log: document.getElementById('log'),
+            startBtn: document.getElementById('startBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            character: document.getElementById('character'),
+            scenes: document.querySelectorAll('.scene'),
+            gameAudioControl: document.getElementById('gameAudioControl'),
+            
+            // 场景音频元素（按场景ID映射）
+            sceneAudios: {
+                library: document.getElementById('libraryAudio'),
+                forest: document.getElementById('forestAudio'),
+                temple: document.getElementById('templeAudio'),
+                puzzle: document.getElementById('puzzleAudio'),
+                river: document.getElementById('riverAudio'),
+                treasure: document.getElementById('treasureAudio')
+            }
+        };
+
+        // 工具函数：更新状态文本
+        function updateStatus(text, isFailure = false) {
+            dom.status.textContent = text;
+            dom.status.className = `game-status ${isFailure ? 'failure' : ''}`;
+        }
+
+        // 工具函数：添加日志
+        function addLog(entry, isFailure = false) {
             const logEntry = document.createElement('div');
-            logEntry.className = `log-entry ${isSuccess ? '' : 'failure'}`;
+            logEntry.className = `log-entry ${isFailure ? 'failure' : ''}`;
             logEntry.textContent = entry;
-            logEl.appendChild(logEntry);
-            logEl.scrollTop = logEl.scrollHeight;
+            dom.log.appendChild(logEntry);
+            // 滚动到最新日志
+            dom.log.scrollTop = dom.log.scrollHeight;
+            
+            // 更新状态中的日志
+            const currentState = GameState.getCurrentState();
+            currentState.logEntries.push({ content: entry, isFailure, time: new Date().getTime() });
+            GameState.saveState(currentState);
         }
-        
-        // 辅助函数：更新状态
-        function updateStatus(text, isSuccess = true) {
-            statusEl.className = `game-status ${isSuccess ? '' : 'failure'}`;
-            statusEl.textContent = text;
+
+        // 工具函数：加载保存的日志
+        function loadSavedLogs(logs) {
+            dom.log.innerHTML = ''; // 清空现有日志
+            if (!logs || logs.length === 0) return;
+            logs.forEach(log => {
+                addLog(log.content, log.isFailure);
+            });
         }
-        
-        // 辅助函数：切换场景
-        function showScene(sceneId) {
-            scenes.forEach(scene => scene.classList.remove('active'));
+
+        // 工具函数：切换场景（含音频切换）
+        function switchScene(sceneId) {
+            // 1. 隐藏所有场景，显示目标场景
+            dom.scenes.forEach(scene => scene.classList.remove('active'));
             document.getElementById(sceneId).classList.add('active');
             
-            // 重置角色位置
-            character.style.left = '50px';
-            
-            // 角色移动动画
+            // 2. 角色动画：重置位置并移动
+            dom.character.style.left = '50px';
+            dom.character.classList.add('facing-right');
             setTimeout(() => {
-                character.style.left = '600px';
+                dom.character.style.left = '70%';
+            }, 500);
+            
+            // 3. 音频切换：停止当前场景音频，播放目标场景音频（按保存的状态）
+            const currentState = GameState.getCurrentState();
+            Object.values(dom.sceneAudios).forEach(audio => audio.pause());
+            if (currentState.audioStates[sceneId]) {
+                dom.sceneAudios[sceneId].play().catch(e => {
+                    console.log(`音频播放失败（${sceneId}）：`, e);
+                });
+            }
+            
+            // 4. 更新状态中的当前场景
+            GameState.updateState({ currentScene: sceneId });
+        }
+
+        // 工具函数：切换音频状态（全景页/游戏页通用）
+        function toggleAudio(type, audioElement, controlElement) {
+            const currentState = GameState.getCurrentState();
+            const isPlaying = currentState.audioStates[type];
+            
+            if (isPlaying) {
+                audioElement.pause();
+                controlElement.innerHTML = '<i class="fa fa-volume-off"></i>';
+            } else {
+                audioElement.play().catch(e => {
+                    console.log(`音频播放失败（${type}）：`, e);
+                });
+                controlElement.innerHTML = '<i class="fa fa-volume-up"></i>';
+            }
+            
+            // 更新音频状态到localStorage
+            GameState.updateState({
+                audioStates: {
+                    ...currentState.audioStates,
+                    [type]: !isPlaying
+                }
+            });
+        }
+
+        // -------------- 4. 核心游戏逻辑（含状态恢复）--------------
+        // 从全景页进入游戏页
+        function enterGamePage(sceneId) {
+            dom.panoramaPage.style.opacity = '0';
+            setTimeout(() => {
+                dom.panoramaPage.style.display = 'none';
+                dom.gameContainer.style.display = 'block';
+                switchScene(sceneId); // 切换到选择的场景
+                
+                // 恢复游戏状态（进度、日志）
+                const currentState = GameState.getCurrentState();
+                updateStatus(getProgressText(currentState.adventureProgress));
+                loadSavedLogs(currentState.logEntries);
+                
+                // 恢复音频控制图标
+                if (!currentState.audioStates[sceneId]) {
+                    dom.gameAudioControl.innerHTML = '<i class="fa fa-volume-off"></i>';
+                }
+            }, 1000);
+        }
+
+        // 从游戏页返回全景页
+        function backToPanorama() {
+            // 暂停所有游戏场景音频
+            Object.values(dom.sceneAudios).forEach(audio => audio.pause());
+            
+            dom.gameContainer.style.display = 'none';
+            dom.panoramaPage.style.display = 'flex';
+            setTimeout(() => {
+                dom.panoramaPage.style.opacity = '1';
+                // 播放全景页音频（按保存的状态）
+                const currentState = GameState.getCurrentState();
+                if (currentState.audioStates.panorama) {
+                    dom.panoramaAudio.play();
+                }
+                // 恢复全景页音频控制图标
+                dom.panoramaAudioControl.innerHTML = currentState.audioStates.panorama 
+                    ? '<i class="fa fa-volume-up"></i>' 
+                    : '<i class="fa fa-volume-off"></i>';
             }, 500);
         }
-        
-        // 使用async/await重写寻宝过程
-        async function findTreasureWithAsyncAwait() {
+
+        // 根据进度获取状态文本
+        function getProgressText(progress) {
+            const texts = [
+                "点击开始按钮，开始你的寻宝冒险！",
+                "已在图书馆找到初始线索，准备前往森林...",
+                "已穿越森林，前方是太阳神庙...",
+                "已进入神庙，发现谜题机关...",
+                "已解开谜题，找到地下通道...",
+                "已渡过地下河，发现神秘箱子...",
+                "准备打开宝藏箱，见证奇迹时刻...",
+                "恭喜！你已找到传说中的宝藏！"
+            ];
+            return texts[progress] || texts[0];
+        }
+
+        // 完整寻宝流程（async/await）
+        async function startTreasureHunt() {
+            const currentState = GameState.getCurrentState();
+            // 如果已完成，提示重置
+            if (currentState.adventureProgress === 7) {
+                updateStatus("你已找到宝藏！点击重置按钮可重新开始冒险～");
+                return;
+            }
+
+            // 禁用按钮防止重复点击
+            dom.startBtn.disabled = true;
+            dom.startBtn.textContent = "冒险进行中...";
+            updateStatus("冒险开始，正在前往第一个地点...");
+
             try {
-                // 禁用按钮防止重复点击
-                startBtn.disabled = true;
-                startBtn.textContent = "冒险进行中...";
-                
-                // 清空之前的日志
-                logEl.innerHTML = '';
-                
-                // 开始寻宝
-                updateStatus("开始寻宝之旅...");
-                addLog("寻宝开始！");
-                
-                // 图书馆获取初始线索
-                showScene('library');
-                updateStatus("正在图书馆寻找线索...");
-                const clue = await TreasureMap.getInitialClue();
-                addLog(clue);
-                updateStatus(clue);
-                
-                // 解码古老文字
-                updateStatus("正在解码古老的文字...");
-                const decoded = await TreasureMap.decodeAncientScript(clue);
+                // 步骤1：图书馆（进度0→1）
+                if (currentState.adventureProgress < 1) {
+                    switchScene('library');
+                    updateStatus("正在图书馆寻找线索...");
+                    const clue = await TreasureMap.getInitialClue();
+                    addLog(clue);
+                    updateStatus(clue);
+                    GameState.updateState({ adventureProgress: 1 });
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+
+                // 步骤2：解码线索（进度1→1，过渡到森林）
+                updateStatus("正在解码古老线索...");
+                const decoded = await TreasureMap.decodeAncientScript("图书馆线索");
                 addLog(decoded);
                 updateStatus(decoded);
-                
-                // 穿越森林
-                showScene('forest');
-                updateStatus("准备穿越森林...");
-                const forestResult = await TreasureMap.crossForest();
-                addLog(forestResult);
-                updateStatus(forestResult);
-                
-                // 搜索神庙
-                showScene('temple');
-                updateStatus("正在探索神庙...");
-                const templeResult = await TreasureMap.searchTemple(decoded);
-                addLog(templeResult);
-                updateStatus(templeResult);
-                
-                // 解开谜题
-                showScene('puzzle');
-                updateStatus("正在尝试解开神庙谜题...");
-                const puzzleResult = await TreasureMap.solvePuzzle();
-                addLog(puzzleResult);
-                updateStatus(puzzleResult);
-                
-                // 渡过河流
-                showScene('river');
-                updateStatus("准备渡过地下河...");
-                const riverResult = await TreasureMap.crossRiver();
-                addLog(riverResult);
-                updateStatus(riverResult);
-                
-                // 打开宝箱
-                showScene('treasure');
-                updateStatus("准备打开宝箱...");
-                const treasure = await TreasureMap.openTreasureBox();
-                addLog(treasure, true);
-                updateStatus(treasure, true);
-                
-                // 冒险成功结束
-                startBtn.textContent = "再次寻宝";
-                startBtn.disabled = false;
-                
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // 步骤3：森林（进度1→2）
+                if (currentState.adventureProgress < 2) {
+                    switchScene('forest');
+                    updateStatus("准备穿越迷雾森林...");
+                    const forestResult = await TreasureMap.crossForest();
+                    addLog(forestResult);
+                    updateStatus(forestResult);
+                    GameState.updateState({ adventureProgress: 2 });
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+
+                // 步骤4：神庙（进度2→3）
+                if (currentState.adventureProgress < 3) {
+                    switchScene('temple');
+                    updateStatus("正在探索太阳神庙...");
+                    const templeResult = await TreasureMap.searchTemple('forest');
+                    addLog(templeResult);
+                    updateStatus(templeResult);
+                    GameState.updateState({ adventureProgress: 3 });
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+
+                // 步骤5：谜题（进度3→4）
+                if (currentState.adventureProgress < 4) {
+                    switchScene('puzzle');
+                    updateStatus("正在解开神庙谜题...");
+                    const puzzleResult = await TreasureMap.solvePuzzle();
+                    addLog(puzzleResult);
+                    updateStatus(puzzleResult);
+                    GameState.updateState({ adventureProgress: 4 });
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+
+                // 步骤6：河流（进度4→5）
+                if (currentState.adventureProgress < 5) {
+                    switchScene('river');
+                    updateStatus("准备渡过地下暗河...");
+                    const riverResult = await TreasureMap.crossRiver();
+                    addLog(riverResult);
+                    updateStatus(riverResult);
+                    GameState.updateState({ adventureProgress: 5 });
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+
+                // 步骤7：宝藏（进度5→6→7）
+                if (currentState.adventureProgress < 7) {
+                    switchScene('treasure');
+                    updateStatus("准备打开宝藏箱...");
+                    const treasureResult = await TreasureMap.openTreasureBox();
+                    addLog(treasureResult);
+                    updateStatus(treasureResult);
+                    GameState.updateState({ adventureProgress: 7 });
+                }
+
+                // 冒险完成
+                dom.startBtn.textContent = "再次寻宝";
+                dom.startBtn.disabled = false;
+
             } catch (error) {
-                // 处理错误
-                addLog(`失败: ${error}`, false);
-                updateStatus(`任务失败: ${error}`, false);
-                startBtn.textContent = "重新尝试";
-                startBtn.disabled = false;
+                // 失败处理
+                addLog(`失败: ${error}`, true);
+                updateStatus(`任务失败: ${error}`, true);
+                dom.startBtn.textContent = "重新尝试";
+                dom.startBtn.disabled = false;
             }
         }
-        
-        // 绑定按钮事件
-        startBtn.addEventListener('click', findTreasureWithAsyncAwait);
+
+        // 重置游戏
+        function resetGame() {
+            if (confirm("确定要重置游戏吗？所有进度将被清除！")) {
+                const initialState = GameState.resetState();
+                // 重置UI
+                updateStatus(getProgressText(initialState.adventureProgress));
+                dom.log.innerHTML = '';
+                // 重置场景和音频
+                switchScene(initialState.currentScene);
+                dom.gameAudioControl.innerHTML = '<i class="fa fa-volume-up"></i>';
+                dom.startBtn.textContent = "开始寻宝";
+            }
+        }
+
+        // -------------- 5. 事件绑定（页面加载时初始化）--------------
+        window.addEventListener('DOMContentLoaded', () => {
+            const currentState = GameState.getCurrentState();
+
+            // 1. 全景页事件
+            // 地点标记点击：进入对应场景的游戏页
+            dom.locationMarkers.forEach(marker => {
+                marker.addEventListener('click', () => {
+                    const sceneId = marker.dataset.scene;
+                    enterGamePage(sceneId);
+                    // 暂停全景页音频
+                    dom.panoramaAudio.pause();
+                });
+            });
+            // 全景页音频控制
+            dom.panoramaAudioControl.addEventListener('click', () => {
+                toggleAudio('panorama', dom.panoramaAudio, dom.panoramaAudioControl);
+            });
+            // 初始化全景页音频（按保存的状态）
+            if (currentState.audioStates.panorama) {
+                dom.panoramaAudio.play().catch(e => {
+                    console.log("全景页音频自动播放失败（需用户交互）：", e);
+                });
+            } else {
+                dom.panoramaAudioControl.innerHTML = '<i class="fa fa-volume-off"></i>';
+            }
+
+            // 2. 游戏页事件
+            // 返回全景页
+            dom.backToPanoramaBtn.addEventListener('click', backToPanorama);
+            // 游戏音频控制（控制当前场景音频）
+            dom.gameAudioControl.addEventListener('click', () => {
+                const currentScene = GameState.getCurrentState().currentScene;
+                toggleAudio(currentScene, dom.sceneAudios[currentScene], dom.gameAudioControl);
+            });
+            // 开始寻宝
+            dom.startBtn.addEventListener('click', startTreasureHunt);
+            // 重置游戏
+            dom.resetBtn.addEventListener('click', resetGame);
+
+            // 3. 恢复上次进度（如果直接打开页面且有进度）
+            if (currentState.adventureProgress > 0 && currentState.lastPage === 'game') {
+                enterGamePage(currentState.currentScene);
+            } else {
+                // 记录最后页面为全景页
+                GameState.updateState({ lastPage: 'panorama' });
+            }
+        });
     </script>
 </body>
 </html>
